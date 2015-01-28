@@ -7,6 +7,20 @@ use Yii;
 class Module extends \yii\base\Module {
 
     /**
+     * @var array Available comments statuses [statusId => statusName]
+     */
+    public static $statuses = [
+        1 => 'New',
+        2 => 'Accepted',
+        3 => 'Deleted',
+    ];
+
+    /**
+     * @var array Array of users [userId => userName]
+     */
+    public static $users = [];
+
+    /**
      * @inheritdoc
      */
     public $defaultRoute = 'comment';
@@ -28,6 +42,18 @@ class Module extends \yii\base\Module {
                 'basePath' => '@itzen/comments/messages'
             ];
         }
+    }
+
+    /**
+     * Returns array of translated statuses
+     * @return array
+     */
+    public static function getStatuses() {
+        $statuses = [];
+        foreach (self::$statuses as $key => $status) {
+            $statuses[$key] = Yii::t('itzen', $status);
+        }
+        return $statuses;
     }
 
 }

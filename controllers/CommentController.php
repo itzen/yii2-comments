@@ -1,13 +1,12 @@
 <?php
 
-namespace backend\modules\core\controllers;
+namespace itzen\comments\controllers;
 
 use Yii;
-use common\models\core\Comment;
-use backend\modules\core\models\search\Comment as CommentSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use itzen\comments\models\search\Comment;
 
 /**
  * CommentController implements the CRUD actions for Comment model.
@@ -32,7 +31,7 @@ class CommentController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new CommentSearch;
+        $searchModel = new Comment;
         $dataProvider = $searchModel->search(Yii::$app->request->getQueryParams());
 
         return $this->render('index', [

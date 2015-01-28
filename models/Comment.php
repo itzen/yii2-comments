@@ -1,13 +1,11 @@
 <?php
 
-namespace itzen\comments\models\core;
+namespace itzen\comments\models;
 
-    use Yii;
-    use kartik\grid\GridView;
-    use yii\helpers\ArrayHelper;
-   
-    use common\models\core\Status;
-    use common\models\User;
+use itzen\comments\Module;
+use kartik\grid\GridView;
+use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "{{%core_comment}}".
@@ -27,11 +25,8 @@ namespace itzen\comments\models\core;
  * @property integer $rating
  * @property integer $object_id
  * @property string $object_key
- *
- * @property Status $status
- * @property User $user
  */
-class Comment extends \yii\db\ActiveRecord
+class Comment extends ActiveRecord
 {
     public $expandalbe = GridView::ROW_COLLAPSED;
     /**
@@ -88,6 +83,22 @@ class Comment extends \yii\db\ActiveRecord
     public static function find($q = null) {
         return parent::find()->orderBy('sortorder asc');
     }
+    
+    /**
+     * @return []
+     */
+    public function getAvailableStatuses() {
+        return Module::getStatuses();
+    }
+
+
+    /**
+     * @return []
+     */
+    public function getAvailableUsers() {
+        return Module::$users;
+    }
+
     
 
 }
