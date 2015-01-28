@@ -1,0 +1,28 @@
+{
+    "name": "itzen/yii2-comments",
+    "description": "Comments module for Yii2 ",
+    "keywords": ["yii2", "comments"],
+    "type": "yii2-extension",
+    "license": "BSD-3-Clause",
+    "support": {
+        "issues": "https://github.com/itzen/yii2-comments/issues",
+        "source": "https://github.com/itzen/yii2-comments"
+    },
+    "authors": [
+        {
+            "name": "Pawe³ Kania",
+            "email": "pawel.kania@itzen.pl"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0"
+    },
+    "suggest": {
+        "yiisoft/yii2-bootstrap": "Used when using layout 'left-menu', 'right-menu' or 'top-menu'"
+    },
+    "autoload": {
+        "psr-4": {
+            "itzen\\comments\\": ""
+        }
+    }
+}
