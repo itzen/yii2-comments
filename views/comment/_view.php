@@ -2,19 +2,20 @@
 
 use yii\helpers\Html;
 use kartik\detail\DetailView;
+use kartik\datecontrol\DateControl;
 
 /**
  * @var yii\web\View $this
  * @var common\models\core\Comment $model
  */
+
 $this->title = $model->id;
 $this->params['breadcrumbs'][] = ['label' => Yii::t('common', 'Comments'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="comment-view">
     
-    <?= 
-    DetailView::widget([
+    <?= DetailView::widget([
         'model' => $model,
         'condensed' => true,
         'hover' => true,
@@ -25,31 +26,10 @@ $this->params['breadcrumbs'][] = $this->title;
             'type' => DetailView::TYPE_INFO,
         ],
         'attributes' => [
-            [
-                'attribute' => 'id',
-                'options' => [
-                    'readonly' => 'readonly'
-                ]
-            ],
+            'id',
+            'parent_id',
             'sortorder',
-            [
-                'attribute'=>'status_id',
-                'value'=>$model->status->name,
-                'type'=>DetailView::INPUT_WIDGET,
-                'widgetOptions'=> [
-                    'class'=>DetailView::INPUT_SELECT2,
-                    'data'=> $model->availableStatuses,
-                ]
-            ],
-            [
-                'attribute'=>'user_id',
-                'value'=>$model->user->username,
-                'type'=>DetailView::INPUT_WIDGET,
-                'widgetOptions'=> [
-                    'class'=>DetailView::INPUT_SELECT2,
-                    'data'=> $model->availableUsers,
-                ]
-            ],
+            
             'created_at',
             'updated_at',
             'created_by',
@@ -62,15 +42,14 @@ $this->params['breadcrumbs'][] = $this->title;
             'object_id',
             'object_key',
         ],
-        'deleteOptions' => [
-            'url' => ['delete', 'id' => $model->id],
-            'data' => [
-                'confirm' => Yii::t('common', 'Are you sure you want to delete this item?'),
-                'method' => 'post',
+        'deleteOptions'=>[
+            'url'=>['delete', 'id' => $model->id],
+            'data'=>[
+                'confirm'=> Yii::t('common', 'Are you sure you want to delete this item?'),
+                'method'=>'post',
             ],
         ],
-        'enableEditMode' => true,
-    ]); 
-    ?>
+        'enableEditMode'=>false,
+    ]) ?>
 
 </div>

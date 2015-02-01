@@ -2,9 +2,13 @@
 
 namespace itzen\comments\models;
 
+use common\models\User;
+use itzen\comments\behaviors\CommentableBehavior;
 use itzen\comments\Module;
 use kartik\grid\GridView;
 use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 
 /**
@@ -26,26 +30,47 @@ use yii\db\ActiveRecord;
  * @property integer $object_id
  * @property string $object_key
  */
-class Comment extends ActiveRecord
-{
+class Comment extends ActiveRecord {
+
     public $expandalbe = GridView::ROW_COLLAPSED;
+
+    public $children;
     /**
      * @inheritdoc
      */
-    public static function tableName()
-    {
+    public static function tableName() {
         return '{{%core_comment}}';
     }
- 
-    
+
+    public function behaviors() {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+            ],
+            [
+                'class' => BlameableBehavior::className(),
+                'value' => function () {
+                    $user = Yii::$app->get('user', false);
+                    if ($user) {
+                        return !$user->isGuest ? $user->identity->username : Yii::t('common', 'Guest');
+                    } else {
+                        return 'WEB APP';
+                    }
+                }
+            ],
+            [
+                'class' => CommentableBehavior::className(),
+            ],
+        ];
+    }
+
     /**
      * @inheritdoc
      */
-    public function rules()
-    {
+    public function rules() {
         return [
-            [['sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id'], 'integer'],
-            [['status_id', 'created_at', 'created_by', 'body', 'object_id', 'object_key'], 'required'],
+            [['sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id', 'parent_id'], 'integer'],
+            [['status_id', 'body', 'object_id', 'object_key'], 'required'],
             [['body'], 'string'],
             [['username', 'email'], 'string', 'max' => 45],
             [['website', 'object_key'], 'string', 'max' => 128]
@@ -55,10 +80,10 @@ class Comment extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
-    {
+    public function attributeLabels() {
         return [
             'id' => Yii::t('common', 'ID'),
+            'parent_id' => Yii::t('common', 'Parent comment'),
             'sortorder' => Yii::t('common', 'Sortorder'),
             'status_id' => Yii::t('common', 'Status ID'),
             'user_id' => Yii::t('common', 'User ID'),
@@ -75,15 +100,14 @@ class Comment extends ActiveRecord
             'object_key' => Yii::t('common', 'Object Key'),
         ];
     }
-    
 
     /**
      * @inheritdoc
      */
     public static function find($q = null) {
-        return parent::find()->orderBy('sortorder asc');
+        return parent::find();
     }
-    
+
     /**
      * @return []
      */
@@ -91,14 +115,35 @@ class Comment extends ActiveRecord
         return Module::getStatuses();
     }
 
-
     /**
      * @return []
      */
     public function getAvailableUsers() {
         return Module::$users;
     }
-
     
+     /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
+    
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getParent()
+    {
+        return $this->hasOne(self::className(), ['id' => 'parent_id'])->inverseOf('children');
+    }
+    
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getChildren()
+    {
+        return $this->hasMany(self::className(), ['parent_id' => 'id'])->inverseOf('parent');
+    }
 
 }

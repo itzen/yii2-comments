@@ -10,29 +10,28 @@ use itzen\comments\models\Comment as CommentModel;
 /**
  * Comment represents the model behind the search form about `common\models\core\Comment`.
  */
-class Comment extends CommentModel
-{
-    public function rules()
-    {
+class Comment extends CommentModel {
+
+    public function rules() {
         return [
-            [['id', 'sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id', 'object_key'], 'integer'],
-            [['username', 'email', 'website', 'body'], 'safe'],
+            [['id', 'sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id', 'parent_id'], 'integer'],
+            [['username', 'email', 'website', 'body', 'object_key'], 'safe'],
         ];
     }
 
-    public function scenarios()
-    {
+    public function scenarios() {
         // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
-    public function search($params)
-    {
+    public function search($params) {
         $query = CommentModel::find();
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
+        
+        $query->joinWith(['user', 'user.profile']);
 
         if (!($this->load($params) && $this->validate())) {
             return $dataProvider;
@@ -40,6 +39,7 @@ class Comment extends CommentModel
 
         $query->andFilterWhere([
             'id' => $this->id,
+            'parent_id' => $this->parent_id,
             'sortorder' => $this->sortorder,
             'status_id' => $this->status_id,
             'user_id' => $this->user_id,
@@ -53,10 +53,11 @@ class Comment extends CommentModel
         ]);
 
         $query->andFilterWhere(['like', 'username', $this->username])
-            ->andFilterWhere(['like', 'email', $this->email])
-            ->andFilterWhere(['like', 'website', $this->website])
-            ->andFilterWhere(['like', 'body', $this->body]);
+                ->andFilterWhere(['like', 'email', $this->email])
+                ->andFilterWhere(['like', 'website', $this->website])
+                ->andFilterWhere(['like', 'body', $this->body]);
 
         return $dataProvider;
     }
+
 }

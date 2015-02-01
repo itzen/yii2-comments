@@ -1,26 +1,38 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: zein
- * Date: 8/5/14
- * Time: 12:11 PM
- */
 
-namespace common\components\behaviors;
+namespace itzen\comments\behaviors;
 
-use yii\base\Behavior;
+use Closure;
+use itzen\comments\models\Comment;
 use Yii;
+use yii\base\Behavior;
+use yii\base\InvalidConfigException;
+use yii\db\ActiveRecord;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 
 /**
- * Class LocaleBehavior
- * @package common\components\behaviors
+ * Class CommentableBehavior
+ * @property ActiveRecord $owner
+ * @package itzen\comments\behaviors
  */
-class CommentableBehavior extends Behavior{
+class CommentableBehavior extends Behavior
+{
+
+
+    /**
+     * @var int|Closure
+     * Id of the model or Closure. Default to primary key.
+     */
+    public $object_id;
 
     /**
      * @var string
+     * Key that uniquely identifies the model. Default to fully qualified class name of the model.
      */
-    public $cookieName = '_locale';
+    public $object_key;
+
+
 
     /**
      * @return array
@@ -28,23 +40,70 @@ class CommentableBehavior extends Behavior{
     public function events()
     {
         return [
-            \yii\web\Application::EVENT_BEFORE_REQUEST=>'beforeRequest'
+            ActiveRecord::EVENT_AFTER_DELETE => 'afterDelete',
+            ActiveRecord::EVENT_AFTER_FIND => 'afterFind'
         ];
     }
 
     /**
-     * Resolve application language by checking user cookies, preferred language and profile settings
+     * Adds properties to model which are required by this behavior
+     * @throws InvalidConfigException
      */
-    public function beforeRequest(){
-        if(Yii::$app->getRequest()->getCookies()->has($this->cookieName) && !Yii::$app->session->hasFlash('forceUpdateLocale')){
-            $userLocale = Yii::$app->getRequest()->getCookies()->getValue($this->cookieName);
-        } else {
-            $userLocale = !Yii::$app->user->isGuest
-                        && Yii::$app->user->getIdentity()->profile
-                        && Yii::$app->user->getIdentity()->profile->locale
-                ? Yii::$app->user->getIdentity()->profile->locale
-                : Yii::$app->request->getPreferredLanguage(array_keys(Yii::$app->params['availableLocales']));
+    public function afterFind()
+    {
+        if (!$this->object_id) {
+            $primaryKey = $this->owner->primaryKey();
+            if (isset($primaryKey[0])) {
+                $this->object_id = $this->owner->$primaryKey[0];
+            } else {
+                throw new InvalidConfigException('"' . get_class($this->owner) . '" must have a primary key.');
+            }
+        } elseif ($this->object_id instanceof Closure) {
+            $this->object_id = call_user_func($this->object_id, $this->owner);
         }
-        Yii::$app->language = $userLocale;
+
+        if (!$this->object_key) {
+            $this->object_key = get_class($this->owner);
+        }
     }
+
+    public function afterDelete()
+    {
+
+    }
+
+    /**
+     * @param Comment $comment
+     * @return array|bool
+     */
+    public function addComment(Comment $comment)
+    {
+        $comment->object_id = $this->object_id;
+        $comment->object_key = $this->object_key;
+        if ($comment->save()) {
+            return true;
+        } else {
+            return $comment->getErrors();
+        }
+    }
+
+    public function getComments()
+    {
+        $modelParams = [];
+        $modelParams['Comment']['object_id'] = $this->object_id;
+        $modelParams['Comment']['object_key'] = $this->object_key;
+
+        $params = ArrayHelper::merge(Yii::$app->request->getQueryParams(), $modelParams);
+        $searchModel = new \itzen\comments\models\search\Comment();
+
+        $dataProvider = $searchModel->search($params);
+
+        return [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider
+        ];
+    }
+
+
+
 }

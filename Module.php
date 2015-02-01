@@ -24,6 +24,9 @@ class Module extends \yii\base\Module {
      * @inheritdoc
      */
     public $defaultRoute = 'comment';
+    
+
+    public $defaultAvatar;
 
     /**
      * @inheritdoc
@@ -42,6 +45,10 @@ class Module extends \yii\base\Module {
                 'basePath' => '@itzen/comments/messages'
             ];
         }
+        $view = Yii::$app->getView();
+        $assets=CommentsAsset::register($view);
+        
+        $this->defaultAvatar = $assets->baseUrl.'/avatar.png';
     }
 
     /**
