@@ -38,7 +38,7 @@ class Module extends \yii\base\Module {
      */
     public function init() {
         parent::init();
-        if (!isset(Yii::$app->i18n->translations['itzen'])) {
+        if (!isset(Yii::$app->i18n->translations['itzen']) || !isset(Yii::$app->i18n->translations['*'])) {
             Yii::$app->i18n->translations['itzen'] = [
                 'class' => 'yii\i18n\PhpMessageSource',
                 'sourceLanguage' => 'en',
@@ -47,8 +47,10 @@ class Module extends \yii\base\Module {
         }
         $view = Yii::$app->getView();
         $assets=CommentsAsset::register($view);
-        
-        $this->defaultAvatar = $assets->baseUrl.'/avatar.png';
+
+        if($this->defaultAvatar === null) {
+            $this->defaultAvatar = $assets->baseUrl . '/avatar.png';
+        }
     }
 
     /**
