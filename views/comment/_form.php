@@ -23,8 +23,8 @@ use kartik\datecontrol\DateControl;
         'columns' => 1,
         'attributes' => [
             'sortorder' => ['type' => Form::INPUT_TEXT, 'options' => ['placeholder' => Yii::t('common', 'Enter Sortorder...')]],
-            'status_id' => ['type' => Form::INPUT_DROPDOWN_LIST, 'items' => $model->availableStatuses, 'options' => ['placeholder' => Yii::t('common', 'Choose status...')]],
-            'user_id' => ['type' => Form::INPUT_DROPDOWN_LIST, 'items' => $model->availableUsers, 'options' => ['placeholder' => Yii::t('common', 'Choose user...')]],
+            'status_id' => ['type' => Form::INPUT_DROPDOWN_LIST, 'items' => \yii\helpers\ArrayHelper::map($model->availableStatuses,'id','name'), 'options' => ['placeholder' => Yii::t('common', 'Choose status...')]],
+            'user_id' => ['type' => Form::INPUT_DROPDOWN_LIST, 'items' => \yii\helpers\ArrayHelper::map($model->availableUsers,'id','username'), 'options' => ['placeholder' => Yii::t('common', 'Choose user...')]],
             'rating' => ['type' => Form::INPUT_TEXT, 'options' => ['placeholder' => Yii::t('common', 'Enter Rating...')]],
             'object_id' => ['type' => Form::INPUT_TEXT, 'options' => ['placeholder' => Yii::t('common', 'Enter Object Id...')]],
             'body' => ['type' => Form::INPUT_TEXTAREA, 'options' => ['placeholder' => Yii::t('common', 'Enter Body...'), 'rows' => 6]],

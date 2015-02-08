@@ -5,7 +5,7 @@ use kartik\grid\GridView;
 use kartik\detail\DetailViewAsset;
 
 /* @var $this yii\web\View */
-/* @var $searchModel backend\modules\core\models\search\Comment */
+/* @var $searchModel itzen\comments\models\search\Comment */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
 $this->title = Yii::t('common', 'Comments');
@@ -75,7 +75,7 @@ $this->registerJs('jQuery("#pjax-grid").on("submit", ".kv-expanded-row div form"
             ['class' => 'yii\grid\SerialColumn'],
             'id',
             'sortorder',
-            'status_id',
+            'status',
             'user_id',
             'created_at',
             // 'updated_at',

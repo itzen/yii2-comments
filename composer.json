@@ -10,19 +10,27 @@
     },
     "authors": [
         {
-            "name": "Pawe³ Kania",
+            "name": "Pawel Kania",
             "email": "pawel.kania@itzen.pl"
         }
     ],
     "require": {
-        "yiisoft/yii2": "~2.0"
+        "yiisoft/yii2": "~2.0",
+        "itzen/yii2-status": "*"
     },
     "suggest": {
-        "yiisoft/yii2-bootstrap": "Used when using layout 'left-menu', 'right-menu' or 'top-menu'"
+        "yiisoft/yii2-bootstrap": "Bootstrap css classes are used for styling",
+        "itzen/yii2-setting": "Settings module for yii2 adjusted for using with AdminLte"
     },
     "autoload": {
         "psr-4": {
             "itzen\\comments\\": ""
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/itzen/yii2-setting"
+        }
+    ]
 }

@@ -4,29 +4,20 @@ namespace itzen\comments;
 
 use Yii;
 
-class Module extends \yii\base\Module {
+class Module extends \yii\base\Module
+{
 
-    /**
-     * @var array Available comments statuses [statusId => statusName]
-     */
-    public static $statuses = [
-        1 => 'New',
-        2 => 'Accepted',
-        3 => 'Deleted',
-    ];
-
-    /**
-     * @var array Array of users [userId => userName]
-     */
-    public static $users = [];
 
     /**
      * @inheritdoc
      */
     public $defaultRoute = 'comment';
-    
+
 
     public $defaultAvatar;
+
+
+    public $defaultStatusId = 3;
 
     /**
      * @inheritdoc
@@ -34,35 +25,32 @@ class Module extends \yii\base\Module {
     public $controllerNamespace = 'itzen\comments\controllers';
 
     /**
+     * @var string
+     * Translate category used in Yii::t() function
+     */
+    public static $translateCategory = 'common';
+
+    /**
      * @inheritdoc
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
-        if (!isset(Yii::$app->i18n->translations['itzen']) || !isset(Yii::$app->i18n->translations['*'])) {
-            Yii::$app->i18n->translations['itzen'] = [
+        if (!isset(Yii::$app->i18n->translations[self::$translateCategory]) && !isset(Yii::$app->i18n->translations['*'])) {
+            Yii::$app->i18n->translations[self::$translateCategory] = [
                 'class' => 'yii\i18n\PhpMessageSource',
                 'sourceLanguage' => 'en',
                 'basePath' => '@itzen/comments/messages'
             ];
         }
         $view = Yii::$app->getView();
-        $assets=CommentsAsset::register($view);
+        $assets = CommentsAsset::register($view);
 
-        if($this->defaultAvatar === null) {
+        if ($this->defaultAvatar === null) {
             $this->defaultAvatar = $assets->baseUrl . '/avatar.png';
         }
     }
 
-    /**
-     * Returns array of translated statuses
-     * @return array
-     */
-    public static function getStatuses() {
-        $statuses = [];
-        foreach (self::$statuses as $key => $status) {
-            $statuses[$key] = Yii::t('itzen', $status);
-        }
-        return $statuses;
-    }
+
 
 }

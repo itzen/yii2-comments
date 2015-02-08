@@ -34,18 +34,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 'type'=>DetailView::INPUT_WIDGET,
                 'widgetOptions'=> [
                     'class'=>DetailView::INPUT_SELECT2,
-                    'data'=> $model->availableStatuses,
+                    'data'=> \yii\helpers\ArrayHelper::map($model->availableStatuses,'id', 'name'),
                 ]
             ],
-            [
-                'attribute'=>'user_id',
-                'value'=>$model->user->username,
-                'type'=>DetailView::INPUT_WIDGET,
-                'widgetOptions'=> [
-                    'class'=>DetailView::INPUT_SELECT2,
-                    'data'=> $model->availableUsers,
-                ]
-            ],
+//            [
+//                'attribute'=>'user_id',
+//                'value'=>$model->user->username,
+//                'type'=>DetailView::INPUT_WIDGET,
+//                'widgetOptions'=> [
+//                    'class'=>DetailView::INPUT_SELECT2,
+//                    'data'=> $model->availableUsers,
+//                ]
+//            ],
             'created_at',
             'updated_at',
             'created_by',

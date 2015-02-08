@@ -4,6 +4,7 @@ namespace itzen\comments\behaviors;
 
 use Closure;
 use itzen\comments\models\Comment;
+use itzen\status\models\Status;
 use Yii;
 use yii\base\Behavior;
 use yii\base\InvalidConfigException;
@@ -31,7 +32,6 @@ class CommentableBehavior extends Behavior
      * Key that uniquely identifies the model. Default to fully qualified class name of the model.
      */
     public $object_key;
-
 
 
     /**
@@ -74,16 +74,27 @@ class CommentableBehavior extends Behavior
 
     /**
      * @param Comment $comment
-     * @return array|bool
+     * @return bool
+     * @throws InvalidConfigException
      */
     public function addComment(Comment $comment)
     {
         $comment->object_id = $this->object_id;
         $comment->object_key = $this->object_key;
+        $commentModule = Yii::$app->getModule('comments');
+        $status = Status::find()->where(['and', 'id=:id',  ['or', 'object_key IS NULL', 'object_key=:object_key']]
+        )->params([
+            ':id'=>$commentModule->defaultStatusId,
+            ':object_key' => $this->object_key])->one();
+        if ($status === null) {
+            throw new InvalidConfigException("Default status id must be valid id from status table.");
+        }
+        $comment->status_id = $commentModule->defaultStatusId;
+
         if ($comment->save()) {
             return true;
         } else {
-            return $comment->getErrors();
+            return false;
         }
     }
 
@@ -103,7 +114,6 @@ class CommentableBehavior extends Behavior
             'dataProvider' => $dataProvider
         ];
     }
-
 
 
 }

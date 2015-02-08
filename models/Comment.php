@@ -2,8 +2,6 @@
 
 namespace itzen\comments\models;
 
-use common\models\User;
-use itzen\comments\behaviors\CommentableBehavior;
 use itzen\comments\Module;
 use kartik\grid\GridView;
 use Yii;
@@ -30,19 +28,23 @@ use yii\db\ActiveRecord;
  * @property integer $object_id
  * @property string $object_key
  */
-class Comment extends ActiveRecord {
+class Comment extends ActiveRecord
+{
 
     public $expandalbe = GridView::ROW_COLLAPSED;
 
     public $children;
+
     /**
      * @inheritdoc
      */
-    public static function tableName() {
+    public static function tableName()
+    {
         return '{{%core_comment}}';
     }
 
-    public function behaviors() {
+    public function behaviors()
+    {
         return [
             [
                 'class' => TimestampBehavior::className(),
@@ -59,15 +61,20 @@ class Comment extends ActiveRecord {
                 }
             ],
             [
-                'class' => CommentableBehavior::className(),
+                'class' => \itzen\status\behaviors\StatusableBehavior::className(),
+
             ],
+            [
+                'class' => \common\components\behaviors\UserBehavior::className(),
+            ]
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function rules() {
+    public function rules()
+    {
         return [
             [['sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id', 'parent_id'], 'integer'],
             [['status_id', 'body', 'object_id', 'object_key'], 'required'],
@@ -80,7 +87,8 @@ class Comment extends ActiveRecord {
     /**
      * @inheritdoc
      */
-    public function attributeLabels() {
+    public function attributeLabels()
+    {
         return [
             'id' => Yii::t('common', 'ID'),
             'parent_id' => Yii::t('common', 'Parent comment'),
@@ -102,48 +110,32 @@ class Comment extends ActiveRecord {
     }
 
     /**
-     * @inheritdoc
-     */
-    public static function find($q = null) {
-        return parent::find();
-    }
-
-    /**
-     * @return []
-     */
-    public function getAvailableStatuses() {
-        return Module::getStatuses();
-    }
-
-    /**
-     * @return []
-     */
-    public function getAvailableUsers() {
-        return Module::$users;
-    }
-    
-     /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUser()
-    {
-        return $this->hasOne(User::className(), ['id' => 'user_id']);
-    }
-    
-    /**
      * @return \yii\db\ActiveQuery
      */
     public function getParent()
     {
         return $this->hasOne(self::className(), ['id' => 'parent_id'])->inverseOf('children');
     }
-    
+
     /**
      * @return \yii\db\ActiveQuery
      */
     public function getChildren()
     {
         return $this->hasMany(self::className(), ['parent_id' => 'id'])->inverseOf('parent');
+    }
+
+    public function beforeValidate()
+    {
+        if (parent::beforeValidate()) {
+            if ($this->user !== null) {
+               $this->username = $this->user->username;
+               $this->email = $this->user->email;
+            }
+
+            return true;
+        }
+        return false;
     }
 
 }

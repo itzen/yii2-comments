@@ -2,6 +2,7 @@
 
 namespace itzen\comments\models\search;
 
+use common\components\behaviors\UserBehavior;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;

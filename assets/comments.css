@@ -6,9 +6,20 @@
     padding-left: 86px;
 }
 
+@media (max-width: 767px) {
+    .media > .media-list > li > ul {
+        padding-left: 0px;
+        margin-top: -20px;
+    }
 
-.comments-tree .avatar {
-    width: 64px;
+    .comments-tree >.media-list > li > ul {
+        padding-left: 0px;
+        margin-top: -20px;
+    }
+}
+
+.comments-tree .thumbnail {
+    width: 74px;
 }
 
 .comments-tree .media-body {
