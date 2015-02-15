@@ -2,7 +2,9 @@
 
 namespace itzen\comments\controllers;
 
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Yii;
+use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -55,8 +57,8 @@ class CommentController extends Controller
             return $this->render('view', ['model' => $model]);
         }
     }
-   
-    
+
+
     /**
      * Displays or updates a single Comment model.
      * @param integer $id
@@ -66,10 +68,10 @@ class CommentController extends Controller
     {
         if ($id === null) {
             if (isset($_POST['expandRowKey'])) {
-                $id = (int) $_POST['expandRowKey'];
+                $id = (int)$_POST['expandRowKey'];
             }
             if (isset($_POST['Comment']['id'])) {
-                $id = (int) $_POST['Comment']['id'];
+                $id = (int)$_POST['Comment']['id'];
             }
         }
 
@@ -78,15 +80,14 @@ class CommentController extends Controller
         if (isset($_POST['Comment'])) {
             if ($model->load(Yii::$app->request->post()) && $model->save()) {
                 return "success";
-            }
-            else{
+            } else {
                 $this->renderPartial('_view', ['model' => $model]);
             }
         }
 
         return $this->renderPartial('_view', ['model' => $model]);
     }
-    
+
     /**
      * Creates a new Comment model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -94,10 +95,21 @@ class CommentController extends Controller
      */
     public function actionCreate()
     {
+        if (!Yii::$app->user->can('/comments/comment/create')) {
+            throw new AccessDeniedException;
+        }
         $model = new Comment;
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($model->load(Yii::$app->request->post())) {
+            $status = Yii::$app->getModule('status');
+            $model->status_id = $status->defaultIds['comment'];
+            if(!Yii::$app->user->isGuest){
+                $model->username = Yii::$app->user->getIdentity()->publicIdentity;
+                $model->email = Yii::$app->user->getIdentity()->email;
+            }
+            if ($model->save()) {
+                return $this->redirect(Url::previous('comment'));
+            }
         } else {
             return $this->render('create', [
                 'model' => $model,

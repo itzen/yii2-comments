@@ -11,6 +11,7 @@ use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\VarDumper;
 
 /**
  * Class CommentableBehavior
@@ -40,7 +41,6 @@ class CommentableBehavior extends Behavior
     public function events()
     {
         return [
-            ActiveRecord::EVENT_AFTER_DELETE => 'afterDelete',
             ActiveRecord::EVENT_AFTER_FIND => 'afterFind'
         ];
     }
@@ -61,15 +61,7 @@ class CommentableBehavior extends Behavior
         } elseif ($this->object_id instanceof Closure) {
             $this->object_id = call_user_func($this->object_id, $this->owner);
         }
-
-        if (!$this->object_key) {
-            $this->object_key = get_class($this->owner);
-        }
-    }
-
-    public function afterDelete()
-    {
-
+        $this->object_key = $this->getObjectKey();
     }
 
     /**
@@ -82,9 +74,9 @@ class CommentableBehavior extends Behavior
         $comment->object_id = $this->object_id;
         $comment->object_key = $this->object_key;
         $commentModule = Yii::$app->getModule('comments');
-        $status = Status::find()->where(['and', 'id=:id',  ['or', 'object_key IS NULL', 'object_key=:object_key']]
+        $status = Status::find()->where(['and', 'id=:id', ['or', 'object_key IS NULL', 'object_key=:object_key']]
         )->params([
-            ':id'=>$commentModule->defaultStatusId,
+            ':id' => $commentModule->defaultStatusId,
             ':object_key' => $this->object_key])->one();
         if ($status === null) {
             throw new InvalidConfigException("Default status id must be valid id from status table.");
@@ -115,5 +107,47 @@ class CommentableBehavior extends Behavior
         ];
     }
 
+    public function getObjectKey()
+    {
+        if (!$this->object_key) {
+            $this->object_key = get_class($this->owner);
+        }
+        return $this->object_key;
+    }
+
+    public function getAvgRating($round = true)
+    {
+        $avgRating = $this->owner
+            ->hasMany(Comment::className(), ['object_id' => 'id'])
+            ->onCondition(['object_key' => $this->object_key])
+            ->where(['>', 'rating', 0])
+            ->average('rating');
+
+        if($round){
+            $increments = 1 / 0.5;
+            $avgRating =  (ceil( $avgRating * $increments) / $increments);
+        }
+
+        return $avgRating;
+    }
+
+
+    public function getAvgRatingRel()
+    {
+        return $this->owner
+            ->hasMany(Comment::className(), ['object_id' => 'id'])
+            ->onCondition(['object_key' => $this->object_key]);
+
+    }
+
+    public function getCommentsCount()
+    {
+        $count = $this->owner
+            ->hasMany(Comment::className(), ['object_id' => 'id'])
+            ->onCondition(['object_key' => $this->object_key])
+            ->count('1');
+
+        return $count;
+    }
 
 }

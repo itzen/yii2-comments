@@ -87,6 +87,7 @@ class CommentsWidget extends Widget
                 $comments .= $this->render('comment', [
                     'avatar' => $avatar,
                     'username' => $username,
+                    'rating' => $node['model']->rating,
                     'userurl' => $node['model']['user_id'] === null ? null : Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]),
                     'date' => $node['model']['created_at'],
                     'body' => $node['model']['body']
@@ -116,9 +117,13 @@ class CommentsWidget extends Widget
 
         $comments = $this->getCommentsAsTree();
 
+        $comment = new Comment();
+        $comment->object_id = $this->model->id;
+        $comment->object_key = $this->model->object_key;
+
         return $this->view
             ? $this->render($this->view, [
-                'model' => new Comment(),
+                'model' => $comment,
                 'comments' => $this->htmlCommentTree($comments),
                 'commentsCount' => $this->commentsCount,
             ])

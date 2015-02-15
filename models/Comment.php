@@ -76,11 +76,16 @@ class Comment extends ActiveRecord
     public function rules()
     {
         return [
+            ['body', 'filter', 'filter' => function ($value) {
+                return HtmlPurifier::process($value);
+            }],
             [['sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id', 'parent_id'], 'integer'],
             [['status_id', 'body', 'object_id', 'object_key'], 'required'],
-            [['body'], 'string'],
+            [['username', 'email'], 'required'],
+            //[['body'], 'string', 'min' => 20],
             [['username', 'email'], 'string', 'max' => 45],
-            [['website', 'object_key'], 'string', 'max' => 128]
+            [['website', 'object_key'], 'string', 'max' => 128],
+
         ];
     }
 
@@ -102,7 +107,7 @@ class Comment extends ActiveRecord
             'username' => Yii::t('common', 'Username'),
             'email' => Yii::t('common', 'Email'),
             'website' => Yii::t('common', 'Website'),
-            'body' => Yii::t('common', 'Body'),
+            'body' => Yii::t('common', 'Comment'),
             'rating' => Yii::t('common', 'Rating'),
             'object_id' => Yii::t('common', 'Object ID'),
             'object_key' => Yii::t('common', 'Object Key'),
@@ -129,8 +134,8 @@ class Comment extends ActiveRecord
     {
         if (parent::beforeValidate()) {
             if ($this->user !== null) {
-               $this->username = $this->user->username;
-               $this->email = $this->user->email;
+                $this->username = $this->user->username;
+                $this->email = $this->user->email;
             }
 
             return true;

@@ -14,7 +14,7 @@
             <?= $comments; ?>
         </div>
         <?= $this->render('_form', [
-            'model' => $model
+            'model' => $model,
         ]); ?>
     </div>
 </div>
