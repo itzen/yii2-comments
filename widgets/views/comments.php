@@ -3,7 +3,7 @@
         <h3 class="panel-title">
             <span class="glyphicon glyphicon-comment"></span>
             <?= \Yii::t('frontend', 'Comments'); ?>
-            <span class="label label-info pull-right">
+            <span id="commentsCount" class="label label-info pull-right">
                 <?= $commentsCount; ?>
             </span>
         </h3>

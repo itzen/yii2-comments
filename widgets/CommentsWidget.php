@@ -9,21 +9,19 @@ use yii\caching\DbDependency;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use itzen\comments\CommentsAsset;
 
 /**
  * Comment widget
  * @author Paweł Kania
  */
-class CommentsWidget extends Widget
-{
+class CommentsWidget extends Widget {
     public $model;
     public $printOptions = [];
-
     public $commentsCount;
     public $view = 'comments';
 
-    public function getCommentsAsTree()
-    {
+    public function getCommentsAsTree() {
         $modelParams = [];
         $modelParams['object_id'] = $this->model->object_id;
         $modelParams['object_key'] = $this->model->object_key;
@@ -31,7 +29,6 @@ class CommentsWidget extends Widget
         $dependencyParams = [];
         $dependencyParams[':object_id'] = $this->model->object_id;
         $dependencyParams[':object_key'] = $this->model->object_key;
-
 
         $db = Yii::$app->db;
         $data = $db->cache(function ($db) use ($modelParams) {
@@ -43,8 +40,7 @@ class CommentsWidget extends Widget
         return $tree;
     }
 
-    function parseCommentTree($tree, $root = null)
-    {
+    function parseCommentTree($tree, $root = null) {
         $return = array();
         # Traverse the tree and search for direct children of the root
         foreach ($tree as $key => $element) {
@@ -62,39 +58,11 @@ class CommentsWidget extends Widget
         return empty($return) ? null : $return;
     }
 
-    public function htmlCommentTree($tree)
-    {
+    public function htmlCommentTree($tree) {
         if (!is_null($tree) && count($tree) > 0) {
             $comments = Html::beginTag($this->printOptions['tag'], $this->printOptions['tagOptions']);
             foreach ($tree as $node) {
-                $comments .= Html::beginTag($this->printOptions['elementTag'], $this->printOptions['elementOptions']);
-
-                $parts = [];
-                if ($node['model']->user !== null) {
-                    $avatar = Html::img($node['model']->user->profile->getPicture(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
-                    $parts['{userurl}'] = Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]);
-                } else {
-                    $avatar = Html::img(Yii::$app->getModule('comments')->defaultAvatar, ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
-                    $parts['{userurl}'] = "#";
-                }
-                $username = Html::encode($node['model']['username']);
-
-                if ($node['model']->user !== null) {
-                    $username = Html::a($username, $parts['{userurl}']);
-                }
-
-
-                $comments .= $this->render('comment', [
-                    'avatar' => $avatar,
-                    'username' => $username,
-                    'rating' => $node['model']->rating,
-                    'userurl' => $node['model']['user_id'] === null ? null : Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]),
-                    'date' => $node['model']['created_at'],
-                    'body' => $node['model']['body']
-                ]);
-
-                $comments .= $this->htmlCommentTree($node['children']);
-                $comments .= Html::endTag($this->printOptions['elementTag']);
+                $comments .= $this->prepareSingleCommentView($node);
             }
             $comments .= Html::endTag($this->printOptions['tag']);
             return $comments;
@@ -102,8 +70,68 @@ class CommentsWidget extends Widget
     }
 
 
-    public function run()
-    {
+    public function run() {
+        $this->setOptions();
+        $comments = $this->getCommentsAsTree();
+
+        $comment = new Comment();
+        $comment->object_id = $this->model->id;
+        $comment->object_key = $this->model->object_key;
+        $assets = CommentsAsset::register($this->getView());
+        if (Yii::$app->getModule('comments')->defaultAvatar === null) {
+            Yii::$app->getModule('comments')->defaultAvatar = $assets->baseUrl . '/avatar.png';
+        }
+
+        return $this->view
+            ? $this->render($this->view, [
+                'model' => $comment,
+                'comments' => $this->htmlCommentTree($comments),
+                'commentsCount' => $this->commentsCount,
+            ])
+            : $this->htmlCommentTree($comments);
+    }
+
+    /**
+     * Generate single comment view.
+     * This view will be added to the comments tree.
+     * @param array $node
+     * @return string
+     */
+    public function prepareSingleCommentView($node) {
+        $comment = Html::beginTag($this->printOptions['elementTag'], $this->printOptions['elementOptions']);
+        $parts = [];
+        if ($node['model']->user !== null) {
+            $avatar = Html::img($node['model']->user->profile->getPicture(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
+            $parts['{userurl}'] = Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]);
+        } else {
+            $avatar = Html::img(Yii::$app->getModule('comments')->defaultAvatar, ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
+            $parts['{userurl}'] = "#";
+        }
+        $username = Html::encode($node['model']['username']);
+
+        if ($node['model']->user !== null) {
+            $username = Html::a($username, $parts['{userurl}']);
+        }
+
+        $comment .= $this->render('comment', [
+            'avatar' => $avatar,
+            'username' => $username,
+            'rating' => $node['model']->rating,
+            'userurl' => $node['model']['user_id'] === null ? null : Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]),
+            'date' => $node['model']['created_at'],
+            'body' => $node['model']['body']
+        ]);
+
+        $comment .= $this->htmlCommentTree($node['children']);
+        $comment .= Html::endTag($this->printOptions['elementTag']);
+
+        return $comment;
+    }
+
+    /**
+     * Setting comments tree options
+     */
+    public function setOptions() {
         $this->printOptions['tag'] = ArrayHelper::getValue($this->printOptions, 'tag', 'ul');
         $this->printOptions['tagOptions'] = ArrayHelper::getValue($this->printOptions, 'tagOptions', ['class' => 'media-list']);
         $this->printOptions['elementTag'] = ArrayHelper::getValue($this->printOptions, 'elementTag', 'li');
@@ -114,19 +142,5 @@ class CommentsWidget extends Widget
         $this->printOptions['dateOptions'] = ArrayHelper::getValue($this->printOptions, 'dateOptions', ['class' => 'comment-date']);
         $this->printOptions['bodyOptions'] = ArrayHelper::getValue($this->printOptions, 'bodyOptions', ['class' => 'comment-body']);
         $this->printOptions['actionsOptions'] = ArrayHelper::getValue($this->printOptions, 'actionsOptions', ['class' => 'comment-actions']);
-
-        $comments = $this->getCommentsAsTree();
-
-        $comment = new Comment();
-        $comment->object_id = $this->model->id;
-        $comment->object_key = $this->model->object_key;
-
-        return $this->view
-            ? $this->render($this->view, [
-                'model' => $comment,
-                'comments' => $this->htmlCommentTree($comments),
-                'commentsCount' => $this->commentsCount,
-            ])
-            : $this->htmlCommentTree($comments);
     }
 }
