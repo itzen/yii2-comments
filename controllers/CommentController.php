@@ -99,10 +99,7 @@ class CommentController extends Controller {
             $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
         }
         $model = new Comment;
-echo '<pre>';
-print_r(Yii::$app->request->post());
-echo '</pre>';
-exit();
+
         if ($model->load(Yii::$app->request->post())) {
             $status = Yii::$app->getModule('status');
             $model->status_id = $status->defaultIds['comment'];
