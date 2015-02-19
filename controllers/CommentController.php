@@ -9,14 +9,15 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use itzen\comments\models\search\Comment;
+use common\components\JsonResponse;
+use yii\helpers\Html;
+use itzen\comments\widgets\CommentsWidget;
 
 /**
  * CommentController implements the CRUD actions for Comment model.
  */
-class CommentController extends Controller
-{
-    public function behaviors()
-    {
+class CommentController extends Controller {
+    public function behaviors() {
         return [
             'verbs' => [
                 'class' => VerbFilter::className(),
@@ -31,8 +32,7 @@ class CommentController extends Controller
      * Lists all Comment models.
      * @return mixed
      */
-    public function actionIndex()
-    {
+    public function actionIndex() {
         $searchModel = new Comment;
         $dataProvider = $searchModel->search(Yii::$app->request->getQueryParams());
 
@@ -47,8 +47,7 @@ class CommentController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionView($id)
-    {
+    public function actionView($id) {
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
@@ -64,8 +63,7 @@ class CommentController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionPartialView($id = null)
-    {
+    public function actionPartialView($id = null) {
         if ($id === null) {
             if (isset($_POST['expandRowKey'])) {
                 $id = (int)$_POST['expandRowKey'];
@@ -91,30 +89,35 @@ class CommentController extends Controller
     /**
      * Creates a new Comment model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
+     * @return jsonResponse
      */
-    public function actionCreate()
-    {
+    public function actionCreate() {
+        /** @var JsonResponse $response */
+        $response = Yii::$app->get('jsonResponse');
+
         if (!Yii::$app->user->can('/comments/comment/create')) {
-            throw new AccessDeniedException;
+            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
         }
         $model = new Comment;
 
         if ($model->load(Yii::$app->request->post())) {
             $status = Yii::$app->getModule('status');
             $model->status_id = $status->defaultIds['comment'];
-            if(!Yii::$app->user->isGuest){
+            if (!Yii::$app->user->isGuest) {
                 $model->username = Yii::$app->user->getIdentity()->publicIdentity;
                 $model->email = Yii::$app->user->getIdentity()->email;
             }
             if ($model->save()) {
-                return $this->redirect(Url::previous('comment'));
+                $renderedLastComment = $this->prepareLastCommentView($model);
+                $response->setResponse(JsonResponse::STATUS_SUCCESS, JsonResponse::TYPE_SUCCESS, \Yii::t('common', 'Comment added successfully.'), 200, $renderedLastComment);
+            } else {
+                $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Comment cannot be added.'), -1);
             }
         } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
+            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'form error.'), 404);
         }
+
+        return $response;
     }
 
     /**
@@ -123,8 +126,7 @@ class CommentController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionUpdate($id)
-    {
+    public function actionUpdate($id) {
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
@@ -142,8 +144,7 @@ class CommentController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionDelete($id)
-    {
+    public function actionDelete($id) {
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
@@ -156,12 +157,35 @@ class CommentController extends Controller
      * @return Comment the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($id)
-    {
+    protected function findModel($id) {
         if (($model = Comment::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
+    }
+
+    protected function prepareLastCommentView($model) {
+        $renderedLastComment = '';
+        $commentsWidget = new CommentsWidget(array(
+            'model' => $model
+        ));
+
+        $commentsWidget->setOptions();
+
+        $renderedLastComment .= (count($commentsWidget->getCommentsAsTree()) == 1) ? Html::beginTag($commentsWidget->printOptions['tag'], $commentsWidget->printOptions['tagOptions']) : '';
+        $renderedLastComment .= $commentsWidget->prepareSingleCommentView(array(
+            'model' => $model,
+            'children' => null
+        ));
+        $renderedLastComment .= (count($commentsWidget->getCommentsAsTree()) == 1) ? Html::beginTag($commentsWidget->printOptions['tag']) : '';
+
+        $result = array(
+            'renderedLastComment' => $renderedLastComment,
+            'firstElement' => (count($commentsWidget->getCommentsAsTree()) == 1) ? true : false,
+            'commentsCount' => $commentsWidget->commentsCount
+        );
+
+        return $result;
     }
 }

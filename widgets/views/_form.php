@@ -15,7 +15,13 @@ use kartik\datecontrol\DateControl;
 <div class="comment-form">
     <?php if (Yii::$app->user->can('/comments/comment/create')): ?>
         <?php
-        $form = ActiveForm::begin(['type' => ActiveForm::TYPE_VERTICAL, 'action' => '/comments/comment/create']);
+        $form = ActiveForm::begin(
+            [
+                'id' => 'comment-form',
+                'type' => ActiveForm::TYPE_VERTICAL,
+                // 'action' => '/comments/comment/create',
+                'enableAjaxValidation' => true,
+            ]);
         echo $form->errorSummary($model);
 
         echo $form->field($model, 'object_id')->hiddenInput()->label(false);
@@ -48,7 +54,7 @@ use kartik\datecontrol\DateControl;
         ]);
 
         \yii\helpers\Url::remember('', 'comment');
-        echo Html::submitButton($model->isNewRecord ? Yii::t('common', 'Add comment') : Yii::t('common', 'Update comment'), ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']);
+        echo Html::submitButton($model->isNewRecord ? Yii::t('common', 'Add comment') : Yii::t('common', 'Update comment'), ['class' => $model->isNewRecord ? 'btn btn-success btn-add-comment' : 'btn btn-primary btn-add-comment']);
         ActiveForm::end();
         ?>
     <?php else: ?>
@@ -63,3 +69,39 @@ use kartik\datecontrol\DateControl;
     <?php endif; ?>
 
 </div>
+
+<?php
+$js = <<<JS
+
+jQuery('#comment-form').on('click', '.btn-add-comment', function () {
+    var self = this;
+    var url = '/comments/comment/create';
+    jQuery.ajax({
+        'url': url,
+        'type': 'POST',
+        'data': jQuery('#comment-form').serialize(),
+        'dataType': 'JSON',
+        'success': function (data) {
+            if (data.status === 'success') {
+               var element = jQuery('.comments-tree');
+               data.data.firstElement ? element.append(data.data.renderedLastComment) : element.children().append(data.data.renderedLastComment);
+               $('#commentsCount').text(data.data.commentsCount);
+            } else {
+
+            }
+/*            $.growl({
+                    title: '<strong class="growl-title">'+data.status+'</strong><hr/>',
+                    message: data.message
+                },
+                {
+                    type: data.type,
+                    delay: 10000
+                }
+            );*/
+        }
+    });
+});
+JS;
+
+$this->registerJs($js);
+?>
