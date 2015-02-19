@@ -28,8 +28,7 @@ use yii\db\ActiveRecord;
  * @property integer $object_id
  * @property string $object_key
  */
-class Comment extends ActiveRecord
-{
+class Comment extends ActiveRecord {
 
     public $expandalbe = GridView::ROW_COLLAPSED;
 
@@ -38,13 +37,11 @@ class Comment extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
-    {
+    public static function tableName() {
         return '{{%core_comment}}';
     }
 
-    public function behaviors()
-    {
+    public function behaviors() {
         return [
             [
                 'class' => TimestampBehavior::className(),
@@ -73,8 +70,7 @@ class Comment extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function rules()
-    {
+    public function rules() {
         return [
             ['body', 'filter', 'filter' => function ($value) {
                 return HtmlPurifier::process($value);
@@ -83,7 +79,7 @@ class Comment extends ActiveRecord
             [['status_id', 'body', 'object_id', 'object_key'], 'required'],
             [['username', 'email'], 'required'],
             //[['body'], 'string', 'min' => 20],
-            [['user   name', 'email'], 'string', 'max' => 45],
+            [['username', 'email'], 'string', 'max' => 45],
             [['website', 'object_key'], 'string', 'max' => 128],
 
         ];
@@ -92,8 +88,7 @@ class Comment extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
-    {
+    public function attributeLabels() {
         return [
             'id' => Yii::t('common', 'ID'),
             'parent_id' => Yii::t('common', 'Parent comment'),
@@ -117,21 +112,18 @@ class Comment extends ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getParent()
-    {
+    public function getParent() {
         return $this->hasOne(self::className(), ['id' => 'parent_id'])->inverseOf('children');
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getChildren()
-    {
+    public function getChildren() {
         return $this->hasMany(self::className(), ['parent_id' => 'id'])->inverseOf('parent');
     }
 
-    public function beforeValidate()
-    {
+    public function beforeValidate() {
         if (parent::beforeValidate()) {
             if ($this->user !== null) {
                 $this->username = $this->user->username;
