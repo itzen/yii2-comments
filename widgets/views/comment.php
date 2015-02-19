@@ -19,7 +19,7 @@ use yii\helpers\Html;
 <div class="media-body">
     <div class="well">
         <div class="comment-meta">
-            <?= \Yii::t('comments', 'By') . ': ' . Html::encode($username); ?> <?= \Yii::t('comments', 'on {0, date}', $date); ?>
+            <?= \Yii::t('comments', 'By') . ': ' . Html::decode($username); ?> <?= \Yii::t('comments', 'on {0, date}', $date); ?>
             <span class="rating-stars">
             <?php
             if ($rating == 0) {

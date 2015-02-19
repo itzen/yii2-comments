@@ -106,6 +106,7 @@ class CommentController extends Controller {
             if (!Yii::$app->user->isGuest) {
                 $model->username = Yii::$app->user->getIdentity()->publicIdentity;
                 $model->email = Yii::$app->user->getIdentity()->email;
+                $model->user_id = Yii::$app->user->id;
             }
             if ($model->save()) {
                 $renderedLastComment = $this->prepareLastCommentView($model);

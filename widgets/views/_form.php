@@ -86,6 +86,8 @@ jQuery('#comment-form').on('click', '.btn-add-comment', function () {
                var element = jQuery('.comments-tree');
                data.data.firstElement ? element.append(data.data.renderedLastComment) : element.children().append(data.data.renderedLastComment);
                $('#commentsCount').text(data.data.commentsCount);
+               $('#comment-form')[0].reset();
+               $('.redactor-editor').html('');
             } else {
 
             }

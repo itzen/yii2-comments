@@ -83,7 +83,7 @@ class Comment extends ActiveRecord
             [['status_id', 'body', 'object_id', 'object_key'], 'required'],
             [['username', 'email'], 'required'],
             //[['body'], 'string', 'min' => 20],
-            [['username', 'email'], 'string', 'max' => 45],
+            [['user   name', 'email'], 'string', 'max' => 45],
             [['website', 'object_key'], 'string', 'max' => 128],
 
         ];
