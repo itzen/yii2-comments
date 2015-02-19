@@ -101,7 +101,7 @@ class CommentsWidget extends Widget {
         $comment = Html::beginTag($this->printOptions['elementTag'], $this->printOptions['elementOptions']);
         $parts = [];
         if ($node['model']->user !== null) {
-            $avatar = Html::img($node['model']->user->profile->getPicture(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
+            $avatar = Html::img($node['model']->user->profile->getAvatar(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
             $parts['{userurl}'] = Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]);
         } else {
             $avatar = Html::img(Yii::$app->getModule('comments')->defaultAvatar, ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
