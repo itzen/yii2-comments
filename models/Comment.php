@@ -78,7 +78,7 @@ class Comment extends ActiveRecord {
             [['sortorder', 'status_id', 'user_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'rating', 'object_id', 'parent_id'], 'integer'],
             [['status_id', 'body', 'object_id', 'object_key'], 'required'],
             [['username', 'email'], 'required'],
-            //[['body'], 'string', 'min' => 20],
+            [['body'], 'string', 'min' => 20],
             [['username', 'email'], 'string', 'max' => 45],
             [['website', 'object_key'], 'string', 'max' => 128],
 

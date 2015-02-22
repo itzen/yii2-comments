@@ -12,6 +12,8 @@ use itzen\comments\models\search\Comment;
 use common\components\JsonResponse;
 use yii\helpers\Html;
 use itzen\comments\widgets\CommentsWidget;
+use yii\web\Response;
+use yii\widgets\ActiveForm;
 
 /**
  * CommentController implements the CRUD actions for Comment model.
@@ -100,14 +102,14 @@ class CommentController extends Controller {
         }
         $model = new Comment;
 
-        if ($model->load(Yii::$app->request->post())) {
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             $status = Yii::$app->getModule('status');
             $model->status_id = $status->defaultIds['comment'];
             if (!Yii::$app->user->isGuest) {
                 $model->username = Yii::$app->user->getIdentity()->publicIdentity;
                 $model->email = Yii::$app->user->getIdentity()->email;
-                $model->user_id = Yii::$app->user->id;
             }
+
             if ($model->save()) {
                 $renderedLastComment = $this->prepareLastCommentView($model);
                 $response->setResponse(JsonResponse::STATUS_SUCCESS, JsonResponse::TYPE_SUCCESS, \Yii::t('common', 'Comment added successfully.'), 200, $renderedLastComment);
@@ -173,18 +175,18 @@ class CommentController extends Controller {
         ));
 
         $commentsWidget->setOptions();
-
-        $renderedLastComment .= (count($commentsWidget->getCommentsAsTree()) == 1) ? Html::beginTag($commentsWidget->printOptions['tag'], $commentsWidget->printOptions['tagOptions']) : '';
+        $renderedLastComment .= ((count($commentsWidget->getCommentsAsTree()) == 1) || (!empty($model->parent_id))) ? Html::beginTag($commentsWidget->printOptions['tag'], $commentsWidget->printOptions['tagOptions']) : '';
         $renderedLastComment .= $commentsWidget->prepareSingleCommentView(array(
             'model' => $model,
             'children' => null
         ));
-        $renderedLastComment .= (count($commentsWidget->getCommentsAsTree()) == 1) ? Html::beginTag($commentsWidget->printOptions['tag']) : '';
+        $renderedLastComment .= ((count($commentsWidget->getCommentsAsTree()) == 1) || (!empty($model->parent_id))) ? Html::beginTag($commentsWidget->printOptions['tag']) : '';
 
         $result = array(
             'renderedLastComment' => $renderedLastComment,
             'firstElement' => (count($commentsWidget->getCommentsAsTree()) == 1) ? true : false,
-            'commentsCount' => $commentsWidget->commentsCount
+            'commentsCount' => $commentsWidget->commentsCount,
+            'parentId' => $model->parent_id
         );
 
         return $result;

@@ -26,6 +26,7 @@ use kartik\datecontrol\DateControl;
 
         echo $form->field($model, 'object_id')->hiddenInput()->label(false);
         echo $form->field($model, 'object_key')->hiddenInput()->label(false);
+        echo $form->field($model, 'parent_id')->hiddenInput()->label(false);
 
         echo $form->field($model, 'rating')->widget(\kartik\rating\StarRating::classname(), [
             'pluginOptions' => [
@@ -76,6 +77,7 @@ $js = <<<JS
 jQuery('#comment-form').on('click', '.btn-add-comment', function () {
     var self = this;
     var url = '/comments/comment/create';
+    jQuery('#comment-parent_id').val(jQuery('.comment-form').parent().data('element-id'));
     jQuery.ajax({
         'url': url,
         'type': 'POST',
@@ -84,14 +86,22 @@ jQuery('#comment-form').on('click', '.btn-add-comment', function () {
         'success': function (data) {
             if (data.status === 'success') {
                var element = jQuery('.comments-tree');
-               data.data.firstElement ? element.append(data.data.renderedLastComment) : element.children().append(data.data.renderedLastComment);
+               console.log(data.data.parentId);
+               if (data.data.parentId) {
+                    var replayElement = jQuery(element).find('[data-element-id="'+data.data.parentId+'"]');
+               } else {
+                    replayElement =  element.children();
+               }
+               (data.data.firstElement && !data.data.parentId) ? element.append(data.data.renderedLastComment) : replayElement.append(data.data.renderedLastComment);
                $('#commentsCount').text(data.data.commentsCount);
                $('#comment-form')[0].reset();
                $('.redactor-editor').html('');
+               moveForm(element.parent(), true);
+               replyClickHandler();
             } else {
 
             }
-/*            $.growl({
+          jQuery.growl({
                     title: '<strong class="growl-title">'+data.status+'</strong><hr/>',
                     message: data.message
                 },
@@ -99,9 +109,34 @@ jQuery('#comment-form').on('click', '.btn-add-comment', function () {
                     type: data.type,
                     delay: 10000
                 }
-            );*/
+            );
         }
     });
+});
+
+function moveForm(targetElement, startPosition) {
+    var form = jQuery('.comment-form');
+    var newPlace = targetElement;
+    form.slideUp('fast', function(){
+        form.detach();
+        if (newPlace.find('.media-list:first').length && !startPosition) {
+            newPlace.find('.media-list:first').prepend(form);
+        } else {
+            newPlace.append(form);
+        }
+
+        form.slideDown('fast');
+    });
+}
+
+function replyClickHandler() {
+    jQuery('.reply').click(function () {
+        moveForm(jQuery(this).parent().parent().parent().parent().parent(), false);
+    });
+}
+
+$(document).ready(function(){
+    replyClickHandler()
 });
 JS;
 
