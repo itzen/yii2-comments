@@ -37,12 +37,14 @@ use yii\helpers\Html;
             </span>
 
             <div class="action pull-right">
-                <a class="delete" href="#">
-                    <span class="glyphicon glyphicon-remove"></span><?= \Yii::t('frontend', 'Delete'); ?>
-                </a>
-                <a class="edit" href="#">
-                    <span class="glyphicon glyphicon-pencil"></span><?= \Yii::t('frontend', 'Edit'); ?>
-                </a>
+                <?php if ($owner) { ?>
+                    <a class="delete" href="#">
+                        <span class="glyphicon glyphicon-remove"></span><?= \Yii::t('frontend', 'Delete'); ?>
+                    </a>
+                    <a class="edit" href="#">
+                        <span class="glyphicon glyphicon-pencil"></span><?= \Yii::t('frontend', 'Edit'); ?>
+                    </a>
+                <?php } ?>
                 <a class="reply">
                     <span class="glyphicon glyphicon-retweet"></span> <?= \Yii::t('frontend', 'Reply'); ?>
                 </a>

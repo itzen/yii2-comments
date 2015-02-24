@@ -147,10 +147,39 @@ class CommentController extends Controller {
      * @param integer $id
      * @return mixed
      */
-    public function actionDelete($id) {
+    public function actionDelete() {
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionRemoveComment() {
+        $response = Yii::$app->get('jsonResponse');
+
+        if (!Yii::$app->user->can('/comments/comment/delete')) {
+            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
+            return $response;
+        }
+
+        $id = Yii::$app->request->post()['id'];
+
+        $model = $this->findModel($id);
+        if ($model === null) {
+            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Media object not found.'), 404);
+            return $response;
+        }
+        if (Yii::$app->user->can('owner', ['model' => $model, 'attribute' => 'user_id'])) {
+            if ($model->delete()) {
+                $response->setResponse(JsonResponse::STATUS_SUCCESS, JsonResponse::TYPE_SUCCESS, \Yii::t('common', 'Media object deleted successfully.'), 200, $id);
+                Yii::$app->db->schema->refresh();
+            } else {
+                $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Media object cannot be deleted.'), -1);
+            }
+        } else {
+            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
+        }
+
+        return $response;
     }
 
     /**

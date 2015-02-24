@@ -102,7 +102,7 @@ class CommentsWidget extends Widget {
         $this->printOptions['elementOptions']['data-element-id'] = $node['model']->id;
         $comment = Html::beginTag($this->printOptions['elementTag'], $this->printOptions['elementOptions']);
         $parts = [];
-        //TODO find to better way to add _related [user] after ajax
+
         if ($node['model']->user !== null || $node['model']['user_id'] !== null) {
             $user = ($node['model']->user !== null) ? $node['model']->user : User::find()->where(['id' => $node['model']['user_id']])->one();
             $avatar = Html::img($user->profile->getAvatar(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
@@ -119,13 +119,19 @@ class CommentsWidget extends Widget {
             $username = Html::a($username, $parts['{userurl}']);
         }
 
+        if (Yii::$app->user->can('owner', ['model' => $node['model'], 'attribute' => 'user_id'])) {
+            $owner = true;
+        }
+
+
         $comment .= $this->render('comment', [
             'avatar' => $avatar,
             'username' => $username,
             'rating' => $node['model']->rating,
             'userurl' => $node['model']['user_id'] === null ? null : Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]),
             'date' => $node['model']['created_at'],
-            'body' => $node['model']['body']
+            'body' => $node['model']['body'],
+            'owner' => Yii::$app->user->can('owner', ['model' => $node['model'], 'attribute' => 'user_id'])
         ]);
 
         $comment .= $this->htmlCommentTree($node['children']);

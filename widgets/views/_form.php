@@ -86,7 +86,6 @@ jQuery('#comment-form').on('click', '.btn-add-comment', function () {
         'success': function (data) {
             if (data.status === 'success') {
                var element = jQuery('.comments-tree');
-               console.log(data.data.parentId);
                if (data.data.parentId) {
                     var replayElement = jQuery(element).find('[data-element-id="'+data.data.parentId+'"]');
                } else {
@@ -98,6 +97,7 @@ jQuery('#comment-form').on('click', '.btn-add-comment', function () {
                $('.redactor-editor').html('');
                moveForm(element.parent(), true);
                replyClickHandler();
+               deleteClickHandler();
             } else {
 
             }
@@ -138,6 +138,42 @@ function replyClickHandler() {
 $(document).ready(function(){
     replyClickHandler()
 });
+
+
+jQuery('.comments-tree').on('click', '.delete', function (event) {
+    event.preventDefault();
+    var url = '/comments/comment/remove-comment';
+    jQuery.ajax({
+        'url': url,
+        'type': 'POST',
+        'data': 'id=' + jQuery(this).parent().parent().parent().parent().parent().data('element-id'),
+        'dataType': 'JSON',
+        'success': function (data) {
+            if (data.status === 'success') {
+                var element = jQuery('.comments-tree');
+                jQuery(element).find('[data-element-id="'+data.data+'"]').remove();
+            } else {
+
+            }
+          jQuery.growl({
+                    title: '<strong class="growl-title">'+data.status+'</strong><hr/>',
+                    message: data.message
+                },
+                {
+                    type: data.type,
+                    delay: 10000
+                }
+            );
+        }
+    });
+});
+
+function deleteClickHandler() {
+jQuery('.delete').click(function (event) {
+    event.preventDefault();
+    });
+}
+
 JS;
 
 $this->registerJs($js);
