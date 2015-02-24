@@ -19,7 +19,7 @@ use yii\helpers\Html;
 <div class="media-body">
     <div class="well">
         <div class="comment-meta">
-            <?= \Yii::t('comments', 'By') . ': ' . Html::decode($username); ?> <?= \Yii::t('comments', 'on {0, date}', $date); ?>
+            <?= \Yii::t('comments', 'By') . ': ' . $username; ?> <?= \Yii::t('comments', 'on {0, date}', $date); ?>
             <span class="rating-stars">
             <?php
             if ($rating == 0) {
@@ -37,7 +37,13 @@ use yii\helpers\Html;
             </span>
 
             <div class="action pull-right">
-                <a class="reply" href="#">
+                <a class="delete" href="#">
+                    <span class="glyphicon glyphicon-remove"></span><?= \Yii::t('frontend', 'Delete'); ?>
+                </a>
+                <a class="edit" href="#">
+                    <span class="glyphicon glyphicon-pencil"></span><?= \Yii::t('frontend', 'Edit'); ?>
+                </a>
+                <a class="reply">
                     <span class="glyphicon glyphicon-retweet"></span> <?= \Yii::t('frontend', 'Reply'); ?>
                 </a>
             </div>

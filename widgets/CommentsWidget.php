@@ -10,6 +10,7 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use itzen\comments\CommentsAsset;
+use common\models\User;
 
 /**
  * Comment widget
@@ -98,18 +99,23 @@ class CommentsWidget extends Widget {
      * @return string
      */
     public function prepareSingleCommentView($node) {
+        $this->printOptions['elementOptions']['data-element-id'] = $node['model']->id;
         $comment = Html::beginTag($this->printOptions['elementTag'], $this->printOptions['elementOptions']);
         $parts = [];
-        if ($node['model']->user !== null) {
-            $avatar = Html::img($node['model']->user->profile->getAvatar(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
+        //TODO find to better way to add _related [user] after ajax
+        if ($node['model']->user !== null || $node['model']['user_id'] !== null) {
+            $user = ($node['model']->user !== null) ? $node['model']->user : User::find()->where(['id' => $node['model']['user_id']])->one();
+            $avatar = Html::img($user->profile->getAvatar(), ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
             $parts['{userurl}'] = Url::toRoute(['/user/default/profile', 'id' => $node['model']['user_id']]);
         } else {
             $avatar = Html::img(Yii::$app->getModule('comments')->defaultAvatar, ['alt' => $node['model']->username, 'class' => 'media-object avatar']);
             $parts['{userurl}'] = "#";
+
         }
+
         $username = Html::encode($node['model']['username']);
 
-        if ($node['model']->user !== null) {
+        if ($node['model']->user !== null || $node['model']['user_id'] !== null) {
             $username = Html::a($username, $parts['{userurl}']);
         }
 

@@ -56,3 +56,7 @@
 .rating-stars{
     color: #f1c40f;
 }
+
+.action a {
+    margin-left: 10px;
+}
