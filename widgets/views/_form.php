@@ -151,7 +151,8 @@ jQuery('.comments-tree').on('click', '.delete', function (event) {
         'success': function (data) {
             if (data.status === 'success') {
                 var element = jQuery('.comments-tree');
-                jQuery(element).find('[data-element-id="'+data.data+'"]').remove();
+                jQuery(element).find('[data-element-id="' + data.data.id + '"]').remove();
+                $('#commentsCount').text(data.data.commentsCount);
             } else {
 
             }

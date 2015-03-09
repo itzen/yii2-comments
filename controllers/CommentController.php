@@ -4,6 +4,7 @@ namespace itzen\comments\controllers;
 
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Yii;
+use yii\base\Exception;
 use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -147,39 +148,47 @@ class CommentController extends Controller {
      * @param integer $id
      * @return mixed
      */
-    public function actionDelete() {
+    public function actionDelete($id) {
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
     }
 
     public function actionRemoveComment() {
-        $response = Yii::$app->get('jsonResponse');
+        try {
+            $response = Yii::$app->get('jsonResponse');
 
-        if (!Yii::$app->user->can('/comments/comment/delete')) {
-            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
-            return $response;
-        }
-
-        $id = Yii::$app->request->post()['id'];
-
-        $model = $this->findModel($id);
-        if ($model === null) {
-            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Media object not found.'), 404);
-            return $response;
-        }
-        if (Yii::$app->user->can('owner', ['model' => $model, 'attribute' => 'user_id'])) {
-            if ($model->delete()) {
-                $response->setResponse(JsonResponse::STATUS_SUCCESS, JsonResponse::TYPE_SUCCESS, \Yii::t('common', 'Media object deleted successfully.'), 200, $id);
-                Yii::$app->db->schema->refresh();
-            } else {
-                $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Media object cannot be deleted.'), -1);
+            if (!Yii::$app->user->can('/comments/comment/delete')) {
+                $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
+                return $response;
             }
-        } else {
-            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
+
+            $id = Yii::$app->request->post()['id'];
+
+            $model = $this->findModel($id);
+            if ($model === null) {
+                $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Comment not found.'), 404);
+                return $response;
+            }
+            if (Yii::$app->user->can('owner', ['model' => $model, 'attribute' => 'user_id'])) {
+                if ($model->delete()) {
+                    $renderedLastComment = $this->prepareLastCommentView($model);
+                    $response->setResponse(JsonResponse::STATUS_SUCCESS, JsonResponse::TYPE_SUCCESS, \Yii::t('common', 'Comment deleted successfully.'), 200, $renderedLastComment);
+                    Yii::$app->db->schema->refresh();
+                } else {
+                    $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'Comment cannot be deleted.'), -1);
+                }
+            } else {
+                $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', 'You do not have the proper credential to perform this action'), 404);
+            }
+
+            return $response;
+        } catch (Exception $ex) {
+            $message = ($ex->getCode() == 23000) ? 'You can not delete comment with other user reply' : $ex->getMessage();
+            $response->setResponse(JsonResponse::STATUS_ERROR, JsonResponse::TYPE_DANGER, \Yii::t('common', $message), 404);
+            return $response;
         }
 
-        return $response;
     }
 
     /**
@@ -215,7 +224,8 @@ class CommentController extends Controller {
             'renderedLastComment' => $renderedLastComment,
             'firstElement' => (count($commentsWidget->getCommentsAsTree()) == 1) ? true : false,
             'commentsCount' => $commentsWidget->commentsCount,
-            'parentId' => $model->parent_id
+            'parentId' => $model->parent_id,
+            'id' => $model->id,
         );
 
         return $result;
